@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHARK AI Chatbot</title>
+  <style>
+    :root {
+      --primary-color: #0066cc;
+      --secondary-color: #003366;
+      --accent-color: #00aaff;
+      --light-bg: #f5f9ff;
+      --dark-bg: #001a33;
+      --user-bubble: #e1f0ff;
+      --ai-bubble: #ffffff;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--light-bg);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      color: #333;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: var(--shadow);
+      z-index: 10;
+    }
+
+    .logo {
+      height: 40px;
+      width: 40px;
+    }
+
+    .title {
+      font-weight: 600;
+      font-size: 1.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    #chat-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1rem;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    #chat {
+      flex: 1;
+      background: var(--light-bg);
+      border-radius: 12px;
+      padding: 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .bubble {
+      max-width: 80%;
+      padding: 1rem;
+      border-radius: 12px;
+      line-height: 1.5;
+      position: relative;
+      box-shadow: var(--shadow);
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .user {
+      background: var(--user-bubble);
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+
+    .ai {
+      background: var(--ai-bubble);
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+    }
+
+    .ai::before {
+      content: "";
+      position: absolute;
+      left: -10px;
+      top: 0;
+      width: 20px;
+      height: 20px;
+      background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTEyLDJBMTAsMTAgMCAwLDAgMiwxMkExMCwxMCAwIDAsMCAxMiwyMkExMCwxMCAwIDAsMCAyMiwxMkExMCwxMCAwIDAsMCAxMiwyTTEyLDQuOEMxNi4wNyw0LjggMTkuMiw4LjA0IDE5LjIsMTIuMUMxOS4yLDE2LjE2IDE2LjA3LDE5LjMgMTIsMTkuM0M3LjkzLDE5LjMgNC44LDE2LjE2IDQuOCwxMi4xQzQuOCw4LjA0IDcuOTMsNC44IDEyLDQuOE0xMiwxN0MxMy42NSwxNyAxNSwxNS42NSAxNSwxNEMxNSwxMi4zNSAxMy42NSwxMSAxMiwxMUMxMC4zNSwxMSA5LDEyLjM1IDksMTRDOSwxNS42NSAxMC4zNSwxNyAxMiwxN0MxMiwxNyAxMiwxNyAxMiwxN0MxMiwxNyAxMiwxNyAxMiwxN1oiIGZpbGw9IiMwMDY2Y2MiLz48L3N2Zz4=') no-repeat;
+      background-size: contain;
+    }
+
+    #input-area {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      background: white;
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+    }
+
+    #userInput {
+      flex: 1;
+      padding: 0.8rem 1.2rem;
+      border: none;
+      border-radius: 24px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    #sendButton {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    #sendButton:hover {
+      background: var(--secondary-color);
+      transform: scale(1.05);
+    }
+
+    #sendButton:active {
+      transform: scale(0.95);
+    }
+
+    .typing-indicator {
+      display: flex;
+      padding: 1rem;
+      align-self: flex-start;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-color);
+      border-radius: 50%;
+      margin: 0 2px;
+      animation: typingAnimation 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(1) { animation-delay: 0s; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingAnimation {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-5px); }
+    }
+
+    .watermark {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #666;
+      padding: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .bubble {
+        max-width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSJ3aGl0ZSIgZD0iTTI1NiA0OEMxNDEuMSA0OCA0OCAxNDEuMSA0OCAyNTZzOTMuMSAyMDggMjA4IDIwOCAyMDgtOTMuMSAyMDgtMjA4UzM3MC45IDQ4IDI1NiA0OHptLTEyLjUgMTM0LjVjMC0xOS45IDE2LjEtMzYgMzYtMzZzMzYgMTYuMSAzNiAzNnY3MmMwIDE5LjktMTYuMSAzNi0zNiAzNnMtMzYtMTYuMS0zNi0zNnYtNzJ6Ii8+PC9zdmc+" class="logo" alt="Shark AI Logo">
+    <div>
+      <div class="title">SHARK AI</div>
+      <div class="subtitle">Powered by META</div>
+    </div>
+  </div>
+
+  <div id="chat-container">
+    <div id="chat"></div>
+    
+    <div id="input-area">
+      <input type="text" id="userInput" placeholder="Ask me anything..." autocomplete="off">
+      <button id="sendButton" onclick="sendMessage()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22 2L11 13" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="watermark">Created by Nanda with ❤️</div>
+  </div>
+
+  <script>
+    const chatEl = document.getElementById('chat');
+    const inputEl = document.getElementById('userInput');
+    const sendButton = document.getElementById('sendButton');
+
+    let messageHistory = [];
+
+    // Allow sending with Enter key
+    inputEl.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    async function sendMessage() {
+      const userText = inputEl.value.trim();
+      if (!userText) return;
+
+      // Display user message
+      addBubble(userText, 'user');
+      inputEl.value = '';
+      messageHistory.push({ role: 'user', content: userText });
+
+      // Show typing indicator
+      const typingIndicator = showTypingIndicator();
+      
+      try {
+        // Send to API
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer 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",
+            "HTTP-Referer": "https://namablogkamu.blogspot.com",
+            "X-Title": "Chatbot SHARK",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "meta-llama/llama-4-maverick:free",
+            messages: messageHistory
+          })
+        });
+
+        const data = await res.json();
+        const reply = data.choices?.[0]?.message?.content || "I'm sorry, I couldn't process your request. Please try again.";
+        
+        // Remove typing indicator and show AI reply
+        chatEl.removeChild(typingIndicator);
+        addBubble(reply, 'ai');
+        messageHistory.push({ role: 'assistant', content: reply });
+      } catch (error) {
+        chatEl.removeChild(typingIndicator);
+        addBubble("Sorry, I'm having trouble connecting to the server. Please check your connection and try again.", 'ai');
+        console.error("Error:", error);
+      }
+    }
+
+    function addBubble(text, role) {
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${role}`;
+      bubble.textContent = text;
+      chatEl.appendChild(bubble);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
+
+    function showTypingIndicator() {
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'typing-indicator';
+      
+      for (let i = 0; i < 3; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'typing-dot';
+        typingDiv.appendChild(dot);
+      }
+      
+      chatEl.appendChild(typingDiv);
+      chatEl.scrollTop = chatEl.scrollHeight;
+      return typingDiv;
+    }
+  </script>
+</body>
+  </html>
